@@ -1,0 +1,33 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+*/
+
+export enum AppState {
+  IDLE = 'IDLE',
+  CHECKING_KEY = 'CHECKING_KEY',
+  GENERATING_IMAGE = 'GENERATING_IMAGE',
+  GENERATING_VIDEO = 'GENERATING_VIDEO',
+  PLAYING = 'PLAYING',
+  ERROR = 'ERROR'
+}
+
+export interface GenerationResult {
+  imageUrl?: string;
+  videoUrl?: string;
+}
+
+declare global {
+  interface Window {
+    aistudio: {
+      hasSelectedApiKey: () => Promise<boolean>;
+      openSelectKey: () => Promise<void>;
+    };
+  }
+  namespace NodeJS {
+    interface ProcessEnv {
+      API_KEY: string;
+      GEMINI_API_KEY: string;
+    }
+  }
+}
