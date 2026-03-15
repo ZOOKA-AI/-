@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Random Joke Generator 😂 | Free Daily Jokes</title>
+  <meta name="description" content="Enjoy hundreds of random jokes daily! Programming jokes, puns, dark humor and more. Free joke generator powered by JokeAPI." />
+  <meta property="og:title" content="Random Joke Generator 😂 | Free Daily Jokes" />
+  <meta property="og:description" content="Enjoy hundreds of random jokes daily! Free joke generator." />
+  <meta property="og:image" content="https://v2.jokeapi.dev/img/og-image.png" />
+  <meta property="og:url" content="https://zooka-ai.github.io/-/joke-generator/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Random Joke Generator 😂" />
+  <meta name="twitter:description" content="Free random jokes — programming, puns, dark humor &amp; more!" />
+  <link rel="canonical" href="https://zooka-ai.github.io/-/joke-generator/" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Random Joke Generator",
+    "description": "Free random joke generator with categories and safe mode",
+    "applicationCategory": "EntertainmentApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0" }
+  }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-grad-1: #1a1a2e;
+      --bg-grad-2: #16213e;
+      --bg-grad-3: #0f3460;
+      --card-bg: rgba(255,255,255,0.07);
+      --card-border: rgba(255,255,255,0.12);
+      --text-primary: #e8e8f0;
+      --text-secondary: #a0a0c0;
+      --btn-primary-bg: linear-gradient(135deg,#f9ca24,#f0932b,#eb4d4b);
+      --btn-primary-text: #1a1a2e;
+      --punchline-bg: linear-gradient(135deg,#6c5ce7,#a29bfe);
+      --share-bg: rgba(255,255,255,0.1);
+      --ad-bg: #f9f0d0;
+      --ad-border: #f0932b;
+    }
+
+    body.light-mode {
+      --bg-grad-1: #f0f4ff;
+      --bg-grad-2: #e8eeff;
+      --bg-grad-3: #d4ddff;
+      --card-bg: rgba(255,255,255,0.85);
+      --card-border: rgba(100,120,200,0.2);
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --share-bg: rgba(0,0,0,0.06);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3));
+      min-height: 100vh;
+      color: var(--text-primary);
+      transition: background 0.4s, color 0.4s;
+    }
+
+    /* ── Top bar ── */
+    #theme-toggle {
+      position: fixed;
+      top: 14px;
+      right: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      border-radius: 50px;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s;
+      z-index: 100;
+    }
+    #theme-toggle:hover { transform: translateY(-2px); }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    /* ── Ad slots ── */
+    .ad-slot {
+      background: var(--ad-bg);
+      border: 2px dashed var(--ad-border);
+      text-align: center;
+      padding: 20px;
+      color: #999;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 0.85rem;
+    }
+    #ad-mid {
+      display: none;
+      opacity: 0;
+    }
+    #ad-mid.visible {
+      display: block;
+      animation: fadeIn 0.6s forwards;
+    }
+
+    /* ── Title ── */
+    h1 {
+      text-align: center;
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      font-weight: 800;
+      background: linear-gradient(90deg,#f9ca24,#f0932b,#eb4d4b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 28px 0 6px;
+      line-height: 1.2;
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+    }
+
+    /* ── Category chips ── */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .chip {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      border-radius: 50px;
+      padding: 6px 16px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s, transform 0.15s;
+      backdrop-filter: blur(6px);
+    }
+    .chip:hover { transform: translateY(-2px); }
+    .chip.active {
+      background: linear-gradient(135deg,#f9ca24,#f0932b);
+      color: #1a1a2e;
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .btn-fetch {
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+      border: none;
+      border-radius: 50px;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .btn-fetch:hover:not(:disabled) { transform: translateY(-2px); }
+    .btn-fetch:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .safe-mode-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    #safe-toggle {
+      width: 38px;
+      height: 20px;
+      appearance: none;
+      background: #555;
+      border-radius: 50px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+    #safe-toggle:checked { background: #27ae60; }
+    #safe-toggle::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: left 0.25s;
+    }
+    #safe-toggle:checked::after { left: 21px; }
+
+    /* ── Joke counter ── */
+    .joke-counter {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      min-height: 1.2em;
+    }
+
+    /* ── Joke card ── */
+    .joke-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      backdrop-filter: blur(12px);
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    /* ── Spinner ── */
+    .spinner-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255,255,255,0.15);
+      border-top-color: #f9ca24;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* ── Joke text ── */
+    .joke-text {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      line-height: 1.7;
+      color: var(--text-primary);
+      animation: fadeSlide 0.4s ease forwards;
+    }
+    .joke-setup {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      line-height: 1.7;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      animation: fadeSlide 0.4s ease forwards;
+    }
+    .joke-delivery {
+      font-size: clamp(1rem, 2.5vw, 1.15rem);
+      line-height: 1.7;
+      color: #f9ca24;
+      margin-top: 12px;
+      animation: fadeSlide 0.4s ease forwards;
+    }
+    .btn-punchline {
+      background: var(--punchline-bg);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 10px 22px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+      align-self: flex-start;
+      margin-top: 8px;
+    }
+    .btn-punchline:hover { transform: translateY(-2px); }
+
+    /* ── Error ── */
+    .error-box {
+      text-align: center;
+      padding: 10px 0;
+    }
+    .error-box p { color: #eb4d4b; margin-bottom: 12px; font-size: 1rem; }
+    .btn-retry {
+      background: transparent;
+      border: 2px solid #eb4d4b;
+      color: #eb4d4b;
+      border-radius: 50px;
+      padding: 8px 20px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .btn-retry:hover { background: rgba(235,77,75,0.15); transform: translateY(-2px); }
+
+    /* ── Share buttons ── */
+    .share-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+      animation: fadeSlide 0.5s ease forwards;
+    }
+    .share-row.hidden { display: none; }
+    .btn-share {
+      background: var(--share-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      border-radius: 50px;
+      padding: 8px 18px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      backdrop-filter: blur(6px);
+    }
+    .btn-share:hover { transform: translateY(-2px); background: rgba(255,255,255,0.18); }
+
+    /* ── Affiliate banner ── */
+    .affiliate-banner {
+      background: linear-gradient(135deg, rgba(249,202,36,0.15), rgba(240,147,43,0.15));
+      border: 1px solid rgba(249,202,36,0.35);
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    .affiliate-banner a {
+      color: #f9ca24;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .affiliate-banner a:hover { text-decoration: underline; }
+
+    /* ── Email subscribe ── */
+    .subscribe-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      margin-bottom: 20px;
+    }
+    .subscribe-box h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+    .subscribe-box p {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      margin-bottom: 16px;
+    }
+    .subscribe-form {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .subscribe-form input[type="email"] {
+      flex: 1 1 220px;
+      padding: 10px 16px;
+      border-radius: 50px;
+      border: 1px solid var(--card-border);
+      background: rgba(255,255,255,0.08);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .subscribe-form input[type="email"]::placeholder { color: var(--text-secondary); }
+    .subscribe-form input[type="email"]:focus { border-color: #f0932b; }
+    .btn-subscribe {
+      background: var(--btn-primary-bg);
+      color: #1a1a2e;
+      border: none;
+      border-radius: 50px;
+      padding: 10px 22px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .btn-subscribe:hover { transform: translateY(-2px); }
+    .btn-subscribe:disabled { opacity: 0.5; cursor: not-allowed; }
+    #subscribe-msg {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: #27ae60;
+      min-height: 1.2em;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .joke-card { padding: 20px 16px; }
+      .subscribe-form { flex-direction: column; align-items: stretch; }
+      .subscribe-form input[type="email"] { flex: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <button id="theme-toggle" aria-label="Toggle light/dark mode">🌙 Dark</button>
+
+  <div class="container">
+
+    <!-- Replace with actual AdSense script tag in production -->
+    <div id="ad-top" class="ad-slot">📢 Ad Space — Google AdSense (728×90)</div>
+
+    <h1>😂 Random Joke Generator</h1>
+    <p class="subtitle">Your daily dose of laughter — free &amp; instant!</p>
+
+    <!-- Category chips -->
+    <div class="chips" role="group" aria-label="Joke categories">
+      <button class="chip active" data-cat="Any">Any</button>
+      <button class="chip" data-cat="Programming">💻 Programming</button>
+      <button class="chip" data-cat="Pun">🥁 Pun</button>
+      <button class="chip" data-cat="Misc">🎭 Misc</button>
+      <button class="chip" data-cat="Dark">🌑 Dark</button>
+      <button class="chip" data-cat="Spooky">👻 Spooky</button>
+      <button class="chip" data-cat="Christmas">🎄 Christmas</button>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn-fetch" id="btn-fetch">🎲 Get a Joke</button>
+      <label class="safe-mode-label">
+        <input type="checkbox" id="safe-toggle" checked />
+        Safe Mode
+      </label>
+    </div>
+
+    <!-- Joke counter -->
+    <div class="joke-counter" id="joke-counter"></div>
+
+    <!-- Joke card -->
+    <div class="joke-card" id="joke-card" role="region" aria-live="polite" aria-label="Joke display"></div>
+
+    <!-- Social share (hidden until joke loads) -->
+    <div class="share-row hidden" id="share-row">
+      <button class="btn-share" id="btn-twitter">🐦 Share on X</button>
+      <button class="btn-share" id="btn-facebook">📘 Share on Facebook</button>
+      <button class="btn-share" id="btn-copy">📋 Copy to Clipboard</button>
+    </div>
+
+    <!-- Replace with actual AdSense script tag in production -->
+    <div id="ad-mid" class="ad-slot">📢 Ad Space — Google AdSense (300×250)</div>
+
+    <!-- Affiliate banner -->
+    <!-- Replace href with your real Amazon Associates affiliate link -->
+    <div class="affiliate-banner">
+      📚 Love jokes? Check out the funniest joke books on Amazon →
+      <a href="https://amzn.to/joke-books" target="_blank" rel="noopener sponsored">Browse Now 🛒</a>
+    </div>
+
+    <!-- Email subscription -->
+    <div class="subscribe-box">
+      <h2>😂 Get a Joke Every Day!</h2>
+      <p>Join 10,000+ subscribers. No spam, just laughs.</p>
+      <!-- Connect to Mailchimp / ConvertKit API endpoint here -->
+      <form class="subscribe-form" id="subscribe-form" novalidate>
+        <input type="email" id="email-input" placeholder="you@example.com" aria-label="Email address" autocomplete="email" />
+        <button type="submit" class="btn-subscribe" id="btn-subscribe">Subscribe for Free 🎉</button>
+      </form>
+      <div id="subscribe-msg" role="status"></div>
+    </div>
+
+    <!-- Replace with actual AdSense script tag in production -->
+    <div id="ad-bottom" class="ad-slot">📢 Ad Space — Google AdSense (728×90)</div>
+
+  </div><!-- /.container -->
+
+  <script>
+    'use strict';
+
+    /* ── State ── */
+    let currentCategory = 'Any';
+    let jokeCount = 0;
+    let currentJokeText = '';
+
+    /* ── DOM refs ── */
+    const jokeCard      = document.getElementById('joke-card');
+    const jokeCounter   = document.getElementById('joke-counter');
+    const btnFetch      = document.getElementById('btn-fetch');
+    const safeToggle    = document.getElementById('safe-toggle');
+    const shareRow      = document.getElementById('share-row');
+    const btnTwitter    = document.getElementById('btn-twitter');
+    const btnFacebook   = document.getElementById('btn-facebook');
+    const btnCopy       = document.getElementById('btn-copy');
+    const adMid         = document.getElementById('ad-mid');
+    const themeToggle   = document.getElementById('theme-toggle');
+    const subscribeForm = document.getElementById('subscribe-form');
+    const emailInput    = document.getElementById('email-input');
+    const subscribeMsg  = document.getElementById('subscribe-msg');
+    const btnSubscribe  = document.getElementById('btn-subscribe');
+
+    /* ── XSS Prevention ── */
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /* ── Theme ── */
+    (function initTheme() {
+      const saved = localStorage.getItem('jokeTheme');
+      if (saved === 'light') {
+        document.body.classList.add('light-mode');
+        themeToggle.textContent = '☀️ Light';
+      }
+    })();
+
+    themeToggle.addEventListener('click', () => {
+      const isLight = document.body.classList.toggle('light-mode');
+      themeToggle.textContent = isLight ? '☀️ Light' : '🌙 Dark';
+      localStorage.setItem('jokeTheme', isLight ? 'light' : 'dark');
+    });
+
+    /* ── Category chips ── */
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentCategory = chip.dataset.cat;
+      });
+    });
+
+    /* ── Fetch joke ── */
+    async function fetchJoke() {
+      btnFetch.disabled = true;
+      shareRow.classList.add('hidden');
+      jokeCard.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+      const flags = safeToggle.checked ? 'blacklistFlags=nsfw,racist,sexist,explicit' : '';
+      const url = `https://v2.jokeapi.dev/joke/${encodeURIComponent(currentCategory)}${flags ? '?' + flags : ''}`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.message || 'API returned an error');
+        }
+
+        jokeCount++;
+        jokeCounter.textContent = `Joke #${jokeCount} 🎲`;
+
+        if (data.type === 'single') {
+          currentJokeText = data.joke;
+          jokeCard.innerHTML = `<p class="joke-text">${escapeHTML(data.joke)}</p>`;
+        } else {
+          currentJokeText = `${data.setup} — ${data.delivery}`;
+          jokeCard.innerHTML = `
+            <p class="joke-setup">${escapeHTML(data.setup)}</p>
+            <button class="btn-punchline" id="btn-punchline">Show Punchline 👇</button>
+            <p class="joke-delivery" id="joke-delivery" style="display:none">${escapeHTML(data.delivery)}</p>
+          `;
+          document.getElementById('btn-punchline').addEventListener('click', function () {
+            document.getElementById('joke-delivery').style.display = 'block';
+            this.style.display = 'none';
+          });
+        }
+
+        shareRow.classList.remove('hidden');
+        updateShareLinks();
+
+        /* Show #ad-mid every 3rd joke */
+        if (jokeCount % 3 === 0) {
+          adMid.classList.add('visible');
+        }
+
+      } catch (err) {
+        currentJokeText = '';
+        jokeCard.innerHTML = `
+          <div class="error-box">
+            <p>⚠️ Oops! Couldn't fetch a joke right now.<br><small>${escapeHTML(err.message)}</small></p>
+            <button class="btn-retry" id="btn-retry">🔄 Try Again</button>
+          </div>
+        `;
+        document.getElementById('btn-retry').addEventListener('click', fetchJoke);
+      } finally {
+        btnFetch.disabled = false;
+      }
+    }
+
+    /* ── Share helpers ── */
+    function updateShareLinks() {
+      const tweetText = encodeURIComponent('😂 ' + currentJokeText + ' — via Random Joke Generator');
+      const pageURL   = encodeURIComponent(window.location.href);
+      btnTwitter.onclick  = () => window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank', 'noopener');
+      btnFacebook.onclick = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${pageURL}`, '_blank', 'noopener');
+    }
+
+    btnCopy.addEventListener('click', async () => {
+      if (!currentJokeText) return;
+      try {
+        await navigator.clipboard.writeText(currentJokeText);
+      } catch {
+        /* Fallback for older browsers */
+        const ta = document.createElement('textarea');
+        ta.value = currentJokeText;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      const orig = btnCopy.textContent;
+      btnCopy.textContent = '✅ Copied!';
+      setTimeout(() => { btnCopy.textContent = orig; }, 2000);
+    });
+
+    /* ── Email subscribe ── */
+    subscribeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = emailInput.value.trim();
+      const emailRe = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRe.test(val)) {
+        subscribeMsg.style.color = '#eb4d4b';
+        subscribeMsg.textContent = '⚠️ Please enter a valid email address.';
+        return;
+      }
+      btnSubscribe.disabled = true;
+      subscribeMsg.style.color = '#27ae60';
+      subscribeMsg.textContent = '✅ Subscribed! Check your inbox.';
+      emailInput.value = '';
+      /* Re-enable after a moment so user can re-submit with a different email */
+      setTimeout(() => { btnSubscribe.disabled = false; }, 3000);
+    });
+
+    /* ── Init ── */
+    btnFetch.addEventListener('click', fetchJoke);
+    fetchJoke();
+  </script>
+
+</body>
+</html>
+<!--
+  ╔══════════════════════════════════════════╗
+  ║       MONETIZATION CHECKLIST             ║
+  ╠══════════════════════════════════════════╣
+  ║ [ ] Replace #ad-top / #ad-mid / #ad-bottom  ║
+  ║     with real Google AdSense code        ║
+  ║ [ ] Replace affiliate link with your     ║
+  ║     real Amazon Associates link          ║
+  ║ [ ] Connect email form to Mailchimp      ║
+  ║     or ConvertKit API                    ║
+  ║ [ ] Add Google Analytics GA4 tag         ║
+  ║ [ ] Deploy to Vercel / Netlify with      ║
+  ║     a custom domain                      ║
+  ║ [ ] Submit sitemap.xml to Google         ║
+  ║     Search Console                       ║
+  ╚══════════════════════════════════════════╝
+-->
