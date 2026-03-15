@@ -1,0 +1,5 @@
+User-agent: *
+Allow: / 
+Sitemap: https://www.zooka-ai.com/joke-generator/sitemap.xml
+Disallow: /.git/
+Disallow: /node_modules/
